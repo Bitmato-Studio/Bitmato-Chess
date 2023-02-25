@@ -1,0 +1,35 @@
+6 => GameEntity { entity_type: ROOK, team_id: BLACK, first_move: true }
+4 => GameEntity { entity_type: KNIGHT, team_id: BLACK, first_move: true }
+5 => GameEntity { entity_type: BISHOP, team_id: BLACK, first_move: true }
+2 => GameEntity { entity_type: KING, team_id: BLACK, first_move: true }
+3 => GameEntity { entity_type: QUEEN, team_id: BLACK, first_move: true }
+-------------------------------------------------------------------------
+
+7 => GameEntity { entity_type: BISHOP, team_id: BLACK, first_move: true }
+8 => GameEntity { entity_type: KNIGHT, team_id: BLACK, first_move: true }
+9 => GameEntity { entity_type: ROOK, team_id: BLACK, first_move: true }
+10 => GameEntity { entity_type: PAWN, team_id: BLACK, first_move: true }
+11 => GameEntity { entity_type: PAWN, team_id: BLACK, first_move: true }
+12 => GameEntity { entity_type: PAWN, team_id: BLACK, first_move: true }
+13 => GameEntity { entity_type: PAWN, team_id: BLACK, first_move: true }
+14 => GameEntity { entity_type: PAWN, team_id: BLACK, first_move: true }
+15 => GameEntity { entity_type: PAWN, team_id: BLACK, first_move: true }
+16 => GameEntity { entity_type: PAWN, team_id: BLACK, first_move: true }
+17 => GameEntity { entity_type: PAWN, team_id: BLACK, first_move: true }
+-------------------------------------------------------------------------
+50 => GameEntity { entity_type: PAWN, team_id: WHITE, first_move: true }
+51 => GameEntity { entity_type: PAWN, team_id: WHITE, first_move: true }
+52 => GameEntity { entity_type: PAWN, team_id: WHITE, first_move: true }
+53 => GameEntity { entity_type: PAWN, team_id: WHITE, first_move: true }
+54 => GameEntity { entity_type: PAWN, team_id: WHITE, first_move: true }
+55 => GameEntity { entity_type: PAWN, team_id: WHITE, first_move: true }
+56 => GameEntity { entity_type: PAWN, team_id: WHITE, first_move: true }
+57 => GameEntity { entity_type: PAWN, team_id: WHITE, first_move: true }
+58 => GameEntity { entity_type: ROOK, team_id: WHITE, first_move: true }
+59 => GameEntity { entity_type: KNIGHT, team_id: WHITE, first_move: true }
+60 => GameEntity { entity_type: BISHOP, team_id: WHITE, first_move: true }
+61 => GameEntity { entity_type: QUEEN, team_id: WHITE, first_move: true }
+62 => GameEntity { entity_type: KING, team_id: WHITE, first_move: true }
+63 => GameEntity { entity_type: BISHOP, team_id: WHITE, first_move: true }
+64 => GameEntity { entity_type: KNIGHT, team_id: WHITE, first_move: true }
+65 => GameEntity { entity_type: ROOK, team_id: WHITE, first_move: true }
