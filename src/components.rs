@@ -74,6 +74,23 @@ pub struct AssetHandler {
     pub king: Vec<Handle<Image>>,
 
     pub global_font: Handle<Font>,
+    pub test_scene: Handle<Scene>,
+}
+
+/* This is mainly for debug/Loading */
+impl AssetHandler {
+    pub fn as_array(&self) -> Vec<HandleUntyped> {
+        vec![
+            self.pawn[0].clone().into(), self.pawn[1].clone().into(),
+            self.rook[0].clone().into(), self.rook[1].clone().into(),
+            self.bishop[0].clone().into(), self.bishop[1].clone().into(),
+            self.knight[0].clone().into(), self.knight[1].clone().into(),
+            self.queen[0].clone().into(), self.queen[1].clone().into(),
+            self.king[0].clone().into(), self.king[1].clone().into(),
+            self.global_font.clone().into(),
+            self.test_scene.clone().into(),
+        ]
+    }
 }
 
 pub fn get_piece_asset(asset_handler: &AssetHandler, 
@@ -89,5 +106,30 @@ pub fn get_piece_asset(asset_handler: &AssetHandler,
         chess_engine::EntityType::QUEEN => asset_handler.queen[diff].clone(),
         chess_engine::EntityType::KING => asset_handler.king[diff].clone(),
         _ => asset_handler.pawn[0].clone(),
+    }
+}
+
+pub fn is_loaded (
+    server: Res<AssetServer>,
+    loading: Res<AssetHandler>
+) -> i32 {
+    use bevy::asset::LoadState;
+
+    match server.get_group_load_state(loading.as_array().iter().map(| h | h.id )) {
+        LoadState::Failed => {
+            // one asset failed to load
+            println!("Not FAILED Loading...");
+            -1 // go to the error screen
+        },
+        LoadState::Loaded => {
+            // all assets are ready to go
+            println!("Done Loading!");
+            0
+        },
+        _ => {
+            // continue loading: Not done yet
+            println!("Loading...");
+            1
+        },
     }
 }

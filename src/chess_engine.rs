@@ -165,19 +165,6 @@ pub fn create_cell(fen_equiv:char) -> Cell {
     }
 }
 
-// this one works
-pub fn knight_move_check(board: &Board, start_pos:Vec2, end_pos:Vec2) -> bool {
-    // Knights 100% Work - May 2/16/2023 ( Don't make me regret this future me )
-    let vals = vec![-3, -1, 1, 3];
-    println!("{}", start_pos.x - end_pos.x + start_pos.y - end_pos.y);
-
-    if start_pos.x - end_pos.x == 0 || start_pos.x + end_pos.x == 0 || start_pos.y - end_pos.y == 0 || start_pos.y + end_pos.y == 0 {
-        return false;
-    }
-
-    vals.contains(&(start_pos.x - end_pos.x + start_pos.y - end_pos.y))
-}
-
 fn d(from: Vec2, to: Vec2) -> (usize, usize) {
     let dx = match from.x.cmp(&to.x) {
         Ordering::Less => to.x - from.x,

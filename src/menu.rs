@@ -47,13 +47,15 @@ fn quit_button_clicked(
     }
 }
 
-fn spawn_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn spawn_main_menu(
+    mut commands: Commands, 
+    asset_server: Res<AssetServer>
+) {
     let start_button = spawn_button(&mut commands, &asset_server, "Start Game", Color::RED);
     commands.entity(start_button).insert(StartButton);
 
     let quit_button = spawn_button(&mut commands, &asset_server, "Quit", Color::BLUE);
     commands.entity(quit_button).insert(QuitButton);
-
 
     commands
         .spawn(NodeBundle {

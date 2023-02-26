@@ -11,10 +11,3 @@ pub enum LogicalGameState {
     Game,    // the actual game play screen
     Error,   // Something went wrong
 }
-
-#[derive(Resource, Debug, Component, PartialEq, Eq, Clone, Copy)]
-pub enum DisplayQuality {
-    Low,
-    Medium,
-    High,
-}

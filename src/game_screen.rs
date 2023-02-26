@@ -47,7 +47,7 @@ fn draw_board(
 ) { 
 
     let mut game_state = game_object.single_mut();
-    let x_pos = (CELLSIZE * -4) + (CELLSIZE/2) - (CELLSIZE * 2);
+    let x_pos = (CELLSIZE * -4) + (CELLSIZE/2) - (CELLSIZE * 4) + (CELLSIZE / 2);
     let y_pos = (CELLSIZE * 4) - (CELLSIZE/2) + CELLSIZE;
     
     
@@ -190,7 +190,13 @@ fn update_holding_text (
         "None".to_owned()
     };
 }
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>,) {
+fn setup(
+    mut commands: Commands, 
+    asset_server: Res<AssetServer>, 
+    mut meshes: ResMut<Assets<Mesh>>, 
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    game_assets: Res<AssetHandler>
+) {
             
     let game_state = GameState {
         board: chess_engine::Board::create_board(chess_engine::DEFAULTFEN.into()),
@@ -205,7 +211,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut meshes: Res
     let color1 = Color::hex("CBC1AD").unwrap();
     let color2 = Color::hex("242721").unwrap();
 
-    let x_pos = (CELLSIZE * -4) + (CELLSIZE/2) - (CELLSIZE * 2);
+    let x_pos = (CELLSIZE * -4) + (CELLSIZE/2) - (CELLSIZE * 4) + (CELLSIZE / 2);
     let y_pos = (CELLSIZE * 4) - (CELLSIZE/2) + CELLSIZE;
 
     let mut color_index = 0;
@@ -261,13 +267,13 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut meshes: Res
             TextSection::new( 
                 "Current Turn: ",
                 TextStyle {
-                    font: asset_server.load(FONT_FILE),
+                    font: game_assets.global_font.clone(),
                     font_size: 30.0,
                     color: Color::WHITE,
                 },
             ),
             TextSection::from_style(TextStyle {
-                font: asset_server.load(FONT_FILE),
+                font: game_assets.global_font.clone(),
                 font_size: 30.0,
                 color: Color::GOLD,
             }),
@@ -289,13 +295,13 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut meshes: Res
             TextSection::new( 
                 "Current Selected: ",
                 TextStyle {
-                    font: asset_server.load(FONT_FILE),
+                    font: game_assets.global_font.clone(),
                     font_size: 30.0,
                     color: Color::WHITE,
                 },
             ),
             TextSection::from_style(TextStyle {
-                font: asset_server.load(FONT_FILE),
+                font: game_assets.global_font.clone(),
                 font_size: 20.0,
                 color: Color::GOLD,
             }),
@@ -317,13 +323,13 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut meshes: Res
             TextSection::new( 
                 "Current Fen: ",
                 TextStyle {
-                    font: asset_server.load(FONT_FILE),
+                    font: game_assets.global_font.clone(),
                     font_size: 30.0,
                     color: Color::WHITE,
                 },
             ),
             TextSection::from_style(TextStyle {
-                font: asset_server.load(FONT_FILE),
+                font: game_assets.global_font.clone(),
                 font_size: 20.0,
                 color: Color::GOLD,
             }),
@@ -360,10 +366,11 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut meshes: Res
     });
 
     commands.spawn(SceneBundle {
-        scene: asset_server.load("2596.glb#Scene0"),
+        scene: game_assets.test_scene.clone(),
         transform: Transform{
             translation: Vec3 {
                 z: -2.5,
+                x: 2.5,
                 ..default()
             },
             rotation: Quat::from_rotation_y(PI / 2.),
