@@ -118,7 +118,7 @@ pub fn is_loaded (
     match server.get_group_load_state(loading.as_array().iter().map(| h | h.id )) {
         LoadState::Failed => {
             // one asset failed to load
-            println!("Not FAILED Loading...");
+            println!("FAILED Loading...");
             -1 // go to the error screen
         },
         LoadState::Loaded => {

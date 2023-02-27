@@ -206,10 +206,8 @@ fn setup(
         original_cell_index: 0,
     };
 
-    // let color1 = Color::hex("363333").unwrap();
-    // let color2 = Color::hex("6d6e53").unwrap();
-    let color1 = Color::hex("CBC1AD").unwrap();
-    let color2 = Color::hex("242721").unwrap();
+    let color1 = Color::hex("9da19d").unwrap();
+    let color2 = Color::hex("a2433b").unwrap();
 
     let x_pos = (CELLSIZE * -4) + (CELLSIZE/2) - (CELLSIZE * 4) + (CELLSIZE / 2);
     let y_pos = (CELLSIZE * 4) - (CELLSIZE/2) + CELLSIZE;
@@ -369,8 +367,6 @@ fn setup(
         scene: game_assets.test_scene.clone(),
         transform: Transform{
             translation: Vec3 {
-                z: -2.5,
-                x: 2.5,
                 ..default()
             },
             rotation: Quat::from_rotation_y(PI / 2.),

@@ -3,7 +3,7 @@
 #[allow(unused_variables)]
 
 /* Bevy & Third party includes */
-use bevy_inspector_egui::{Inspectable, RegisterInspectable, WorldInspectorPlugin};
+use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 use bevy_interact_2d::*;
 use bevy::prelude::*;
@@ -26,7 +26,10 @@ fn main() {
             window: WindowDescriptor {
                 title: "Bitmatoes Chess".into(),
                 width: ((CELLSIZE * 8) + 128 + CELLSIZE * 6) as f32,
-                height: ((CELLSIZE * 8) + 128 + CELLSIZE)  as f32,
+                // 1024
+
+                height: ((CELLSIZE * 8) + 128 + (CELLSIZE / 2))  as f32,
+                // 672
                 resizable: false,
                 ..default()
             },
@@ -35,6 +38,7 @@ fn main() {
             .build()
             .add_before::<bevy::asset::AssetPlugin, _>(EmbeddedAssetPlugin)
         )
+        .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(InteractionPlugin)
         .add_plugin(drag::DragPlugin)
         .add_state(game_settings::LogicalGameState::Splash)
@@ -61,14 +65,14 @@ fn asset_loading(mut commands: Commands, assets: Res<AssetServer>) {
         queen: vec![assets.load(white.to_owned() + &QUEEN_FILENAME), assets.load(black.to_owned() + &QUEEN_FILENAME)],
         king: vec![assets.load(white.to_owned() + &KING_FILENAME), assets.load(black.to_owned() + &KING_FILENAME)],
         global_font: assets.load(FONT_FILE), 
-        test_scene: assets.load("2596.glb#Scene0"),
+        test_scene: assets.load("yellow_frame1.glb#Scene0"),
     });
 }
 
 fn spawn_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         camera_2d: Camera2d {
-            clear_color: bevy::core_pipeline::clear_color::ClearColorConfig::None,
+            //clear_color: bevy::core_pipeline::clear_color::ClearColorConfig::None,
             ..default()
         },
         camera: Camera {
@@ -82,9 +86,13 @@ fn spawn_camera(mut commands: Commands) {
                 ..default()
             });
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(10.0, 10., 0.).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(10.0, -5., 0.).looking_at(Vec3::ZERO, Vec3::Y),
         camera_3d: Camera3d {
-            //clear_color: bevy::core_pipeline::clear_color::ClearColorConfig::None,
+            clear_color: bevy::core_pipeline::clear_color::ClearColorConfig::None,
+            ..default()
+        },
+        camera: Camera {
+            priority: 2,
             ..default()
         },
         ..default()
