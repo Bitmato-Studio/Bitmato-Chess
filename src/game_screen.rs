@@ -156,7 +156,6 @@ fn interaction_system(
 fn update_turn_text(
     global_thing: Query<&GameState, With<GlobalThing>>,
     mut current_turn_query: Query<&mut Text, With<CurrentTurnText>>
-    
 ) {
     let game_state = global_thing.single();
 
@@ -363,15 +362,15 @@ fn setup(
         ..default()
     });
 
-    commands.spawn(SceneBundle {
-        scene: game_assets.test_scene.clone(),
-        transform: Transform{
-            translation: Vec3 {
-                ..default()
-            },
-            rotation: Quat::from_rotation_y(PI / 2.),
-            ..default()
-        },
-        ..default()
-    });
+    // commands.spawn(SceneBundle {
+    //     scene: game_assets.test_scene.clone(),
+    //     transform: Transform{
+    //         translation: Vec3 {
+    //             ..default()
+    //         },
+    //         rotation: Quat::from_rotation_y(PI / 2.),
+    //         ..default()
+    //     },
+    //     ..default()
+    // });
 }

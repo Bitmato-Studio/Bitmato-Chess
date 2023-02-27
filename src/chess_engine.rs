@@ -51,8 +51,7 @@ pub struct Vec3 {
 // and placing and drawing.
 pub type Position = Vec2;
 
-
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Default, Debug, Clone, Copy,PartialEq)]
 pub struct GameEntity {
     pub entity_type: EntityType,
     pub team_id: TeamLoyalty,
@@ -205,24 +204,70 @@ pub fn validate(board: &Board, from: Vec2, to:Vec2, piece: GameEntity) -> bool {
             return (dx == dy && dx != 0) || (dx == 0 && dy != 0) || (dx == 0 && dy != 0);
         },
         EntityType::KING => {
-            return (dx == 1 || dy == 1);
+            return dx == 1 || dy == 1;
         },
         _ => false
     }
 }
 
-fn validate_horizontal(board: &Board, start: Vec2, end: Vec2) -> bool {
-
-    false
+fn validate_horizontal(board: &Board, start: Vec2, end: Vec2, piece: GameEntity) -> bool {
+    if start.x - end.x == 0 { return true; } // didn't move horizonally
+    // Check X
+    for x in start.x..end.x {
+        let new_pos = Vec2 {
+            x,
+            y: start.y,
+        };
+        let ent_at = board.entity_at(new_pos);
+        if ent_at.is_some() && ent_at.unwrap() != piece{
+            println!("Horizontal: Colliding with {:?} at {:?}", ent_at, new_pos);
+            return ent_at.unwrap().team_id != piece.team_id;
+        }
+    }
+    true
 }
 
-fn validate_vertical(board: &Board, start: Vec2, end: Vec2) -> bool {
+fn validate_vertical(board: &Board, start: Vec2, end: Vec2, piece: GameEntity) -> bool {
+    // Check Y
+    if start.y - end.y == 0 { return true; } // didn't move vertically
+    for y in start.y..end.y {
+        let new_pos = Vec2 {
+            x: start.x,
+            y,
+        };
+        let ent_at = board.entity_at(new_pos);
+        if ent_at.is_some() && ent_at.unwrap() != piece{
+            println!("Vertical: Colliding with {:?} at {:?}", ent_at, new_pos);
+            return ent_at.unwrap().team_id != piece.team_id;
+        }
+    }
+    true
+}
+
+fn validate_diagonal(board: &Board, start: Vec2, end: Vec2, piece: GameEntity) -> bool {
+    // triangles
+    if start.y - end.y == 0 || start.x - end.x == 0 { return false; } // return false if we don't move diagonally
     
-    false
-}
+    // issue when going down and left... yay
+    let mut x_iter = start.x..end.x;
+    println!("Range: {:?}", x_iter);
+    for y in start.y..end.y {
+        let x = x_iter.next().expect("Not enough X");
+        println!("({},{})", x, y);
+        let new_pos = Vec2 {
+            y,
+            x
+        };
 
-fn validate_diagonal(board: &Board, start: Vec2, end: Vec2) -> bool {
-    false 
+        let ent_at = board.entity_at(new_pos);
+        println!("{:?}", ent_at);
+        if ent_at.is_some() && ent_at.unwrap() != piece{
+            println!("Diagonal: Colliding with {:?} at {:?}", ent_at, new_pos);
+
+            return ent_at.unwrap().team_id != piece.team_id;
+        }
+    }
+    true
 }
 
 pub fn move_entity(board: &mut Board, original:Position, new_pos:Position) {
@@ -232,7 +277,23 @@ pub fn move_entity(board: &mut Board, original:Position, new_pos:Position) {
     
     let new_cell = &board.cells[new_pos.y as usize][new_pos.x as usize];
 
-    let is_legal = validate(board, original, new_pos, ent);
+    let mut is_legal =   validate(board, original, new_pos, ent);
+
+    if ent.entity_type != EntityType::KNIGHT && is_legal {
+        is_legal = if validate_diagonal(board, original, new_pos, ent) {
+            true
+        } else { 
+            if !validate_horizontal(board, original, new_pos, ent) {
+                println!("Horizontal False");
+                false
+            } else if !validate_vertical(board, original, new_pos, ent) {
+                println!("Vertical False");
+                false
+            } else {
+                true
+            }
+        };
+    }
 
     if !is_legal {
         println!("Illegal Move!");
