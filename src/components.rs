@@ -3,7 +3,7 @@ use crate::chess_engine;
 use bevy::prelude::*;
 
 /* Lots of constants for us */
-pub const FONT_FILE: &'static str = "fonts/CaskaydiaCoveRegular.otf";
+pub const FONT_FILE: &'static str = "fonts/Eight-Bit_Madness.ttf";
 pub const CELLSIZE: i32 = 64; // TODO: Make this better (dynamic cell size)
 pub const BLACK_TEXT: Color = Color::DARK_GRAY;
 pub const WHITE_TEXT: Color = Color::rgb(99., 103., 110.);
@@ -73,6 +73,7 @@ pub struct AssetHandler {
     pub queen: Vec<Handle<Image>>,
     pub king: Vec<Handle<Image>>,
 
+    pub menu_logo: Handle<Image>,
     pub global_font: Handle<Font>,
     pub test_scene: Handle<Scene>,
 }

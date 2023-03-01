@@ -6,7 +6,10 @@
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 use bevy_interact_2d::*;
-use bevy::prelude::*;
+use bevy::{prelude::*, winit::WinitWindows, window::WindowId};
+use bevy_egui::{egui, EguiContext, EguiPlugin};
+use winit::window::Icon;
+use image;
 
 /* Local Includes */
 mod network_handler;
@@ -18,6 +21,25 @@ mod components;
 mod menu;
 
 use components::*;
+
+fn set_window_icon (
+    windows: NonSend<WinitWindows>
+){
+    let primary = windows.get_window(WindowId::primary()).unwrap();
+
+    let (icon_rgba, icon_width, icon_height) = {
+        let img = image::open("assets/branding/icon_win_bitmato_chess.png")
+                    .expect("Failed to open icon path")
+                    .into_rgba8();
+        let (width, height) = img.dimensions();
+        let rgba = img.into_raw();
+        (rgba, width, height)
+    };
+
+    let icon = Icon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
+    primary.set_window_icon(Some(icon));
+}
+
 
 fn main() { 
     App::new()
@@ -40,12 +62,14 @@ fn main() {
         )
         .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(InteractionPlugin)
-        .add_plugin(drag::DragPlugin)
+        
         .add_state(game_settings::LogicalGameState::Splash)
+        
         .add_startup_system(spawn_camera)
+        .add_startup_system(set_window_icon)
+        
+        // local plugins
         .add_plugin(splash_screen::SplashScreen)
-        
-        
         .add_plugin(menu::MainMenuPlugin)
         .add_plugin(game_screen::GameplayPlugin)
         .add_startup_system_to_stage(StartupStage::PostStartup, asset_loading)
@@ -65,6 +89,7 @@ fn asset_loading(mut commands: Commands, assets: Res<AssetServer>) {
         queen: vec![assets.load(white.to_owned() + &QUEEN_FILENAME), assets.load(black.to_owned() + &QUEEN_FILENAME)],
         king: vec![assets.load(white.to_owned() + &KING_FILENAME), assets.load(black.to_owned() + &KING_FILENAME)],
         global_font: assets.load(FONT_FILE), 
+        menu_logo: assets.load("branding/logo_bitmato_chess_light_1200.png"),
         test_scene: assets.load("yellow_frame1.glb#Scene0"),
     });
 }

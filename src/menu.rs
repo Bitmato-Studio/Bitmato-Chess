@@ -1,14 +1,14 @@
 
 use bevy::{app::AppExit, prelude::*};
-
-use crate::components::{MenuUIroot, StartButton, QuitButton, FONT_FILE};
+use crate::components::{MenuUIroot, StartButton, QuitButton, FONT_FILE, AssetHandler};
 use crate::game_settings;
 
 pub struct MainMenuPlugin;
 
 impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(game_settings::LogicalGameState::Menu).with_system(spawn_main_menu))
+        app
+        .add_system_set(SystemSet::on_enter(game_settings::LogicalGameState::Menu).with_system(spawn_main_menu))
             .add_system_set(
                 SystemSet::on_update(game_settings::LogicalGameState::Menu)
                     .with_system(start_button_clicked)
@@ -49,7 +49,8 @@ fn quit_button_clicked(
 
 fn spawn_main_menu(
     mut commands: Commands, 
-    asset_server: Res<AssetServer>
+    asset_server: Res<AssetServer>,
+    assets: Res<AssetHandler>
 ) {
     let start_button = spawn_button(&mut commands, &asset_server, "Start Game", Color::RED);
     commands.entity(start_button).insert(StartButton);
@@ -61,7 +62,7 @@ fn spawn_main_menu(
         .spawn(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                justify_content: JustifyContent::Center,
+                justify_content: JustifyContent::SpaceAround,
                 flex_direction: FlexDirection::Column,
                 ..default()
             },
@@ -69,20 +70,19 @@ fn spawn_main_menu(
         })
         .insert(MenuUIroot)
         .with_children(| commands | { 
-            commands.spawn( TextBundle {
-                style: Style {
-                    align_self: AlignSelf::Center,
-                    margin: UiRect::all(Val::Percent(3.0)),
+            commands.spawn( ImageBundle {
+                transform: Transform { 
+                    translation: Vec3 {
+                        x: 0.,
+                        ..default()
+                    } ,
                     ..default()
                 },
-                text: Text::from_section(
-                    "Bitmatoes Chess", 
-                    TextStyle {
-                        font: asset_server.load(FONT_FILE),
-                        font_size: 86.0,
-                        color: Color::BLACK,
-                    },
-                ),
+                style : Style {
+                    size: Size::new(Val::Px(1100.), Val::Px(502.)),
+                    ..default()
+                },
+                image: assets.menu_logo.clone().into(),
                 ..default()
             });
         })
