@@ -3,16 +3,16 @@
 #[allow(unused_variables)]
 
 /* Bevy & Third party includes */
-use bevy_inspector_egui::WorldInspectorPlugin;
+// use bevy_inspector_egui::WorldInspectorPlugin;
+use bevy::{prelude::*, winit::WinitWindows, window::WindowId};
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 use bevy_interact_2d::*;
-use bevy::{prelude::*, winit::WinitWindows, window::WindowId};
-use bevy_egui::{egui, EguiContext, EguiPlugin};
 use winit::window::Icon;
 use image;
 
 /* Local Includes */
 mod network_handler;
+mod config_handler;
 mod splash_screen;
 mod game_settings;
 mod chess_engine;
@@ -40,18 +40,47 @@ fn set_window_icon (
     primary.set_window_icon(Some(icon));
 }
 
+#[derive(Debug)]
+struct Login {
+    pub username: String,
+    pub password: String,
+}
+
+fn run_login() -> Login{
+    //extern crate rpassword;
+    //use rpassword::read_password; 
+
+    let mut login = Login{ username: String::new(), password: String::new() };
+
+    print!("Enter DISCORD Username: ");
+    std::io::stdin().read_line(&mut login.username).unwrap();
+
+    // TODO: Make this better lol
+    print!("Enter a Password (NOT FOR DISCORD): ");
+    std::io::stdin().read_line(&mut login.password).unwrap();
+
+    login
+}
+
+fn user_login() -> String {
+    let mut user_uuid: String = String::new();
+    let login = run_login();
+    println!("{:?}", login);
+    user_uuid
+}
 
 fn main() { 
+
+    /* TODO: First time dialog checks */
+    let user_uuid = user_login();
+
     App::new()
         .add_plugins(DefaultPlugins
             .set(WindowPlugin {
             window: WindowDescriptor {
                 title: "Bitmatoes Chess".into(),
                 width: ((CELLSIZE * 8) + 128 + CELLSIZE * 6) as f32,
-                // 1024
-
                 height: ((CELLSIZE * 8) + 128 + (CELLSIZE / 2))  as f32,
-                // 672
                 resizable: false,
                 ..default()
             },
@@ -60,14 +89,13 @@ fn main() {
             .build()
             .add_before::<bevy::asset::AssetPlugin, _>(EmbeddedAssetPlugin)
         )
-        .add_plugin(WorldInspectorPlugin::new())
+        //.add_plugin(WorldInspectorPlugin::new())
         .add_plugin(InteractionPlugin)
-        
         .add_state(game_settings::LogicalGameState::Splash)
         
         .add_startup_system(spawn_camera)
         .add_startup_system(set_window_icon)
-        
+
         // local plugins
         .add_plugin(splash_screen::SplashScreen)
         .add_plugin(menu::MainMenuPlugin)
