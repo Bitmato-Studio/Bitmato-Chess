@@ -1,4 +1,5 @@
 
+
 #[allow(unused)]
 #[allow(unused_variables)]
 
@@ -8,6 +9,8 @@ use bevy::{prelude::*, winit::WinitWindows, window::WindowId};
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 use bevy_interact_2d::*;
 use winit::window::Icon;
+use std::io::Write;
+use std::fs::File;
 use image;
 
 /* Local Includes */
@@ -46,33 +49,60 @@ struct Login {
     pub password: String,
 }
 
-fn run_login() -> Login{
-    //extern crate rpassword;
-    //use rpassword::read_password; 
+fn run_login() -> String{
+    extern crate rpassword;
+    use rpassword::read_password; 
 
     let mut login = Login{ username: String::new(), password: String::new() };
 
     print!("Enter DISCORD Username: ");
+    std::io::stdout().flush().unwrap();
     std::io::stdin().read_line(&mut login.username).unwrap();
+
+    login.username = login.username.trim().to_string();
+    // TODO: Check if it follows discord
 
     // TODO: Make this better lol
     print!("Enter a Password (NOT FOR DISCORD): ");
-    std::io::stdin().read_line(&mut login.password).unwrap();
+    std::io::stdout().flush().unwrap();
+    login.password = read_password().unwrap();
 
-    login
+    login.username + SPLIT_CHAR + &login.password
 }
 
-fn user_login() -> String {
-    let mut user_uuid: String = String::new();
-    let login = run_login();
-    println!("{:?}", login);
-    user_uuid
+fn get_server_ip() -> String {
+    // TEMP function for debug etc etc
+    let mut server_ip_addr = String::new();
+
+    print!("Enter DISCORD Username: ");
+    std::io::stdout().flush().unwrap();
+    std::io::stdin().read_line(&mut server_ip_addr).unwrap();
+
+    server_ip_addr = server_ip_addr.trim().to_string();
+    server_ip_addr
 }
 
 fn main() { 
+    println!(r#" 
+     _______  __   __                             __                      ______  __                                 
+    /       \/  | /  |                           /  |                    /      \/  |                                
+    $$$$$$$  $$/ _$$ |_   _____  ____   ______  _$$ |_    ______        /$$$$$$  $$ |____   ______   _______ _______ 
+    $$ |__$$ /  / $$   | /     \/    \ /      \/ $$   |  /      \       $$ |  $$/$$      \ /      \ /       /       |
+    $$    $$<$$ $$$$$$/  $$$$$$ $$$$  |$$$$$$  $$$$$$/  /$$$$$$  |      $$ |     $$$$$$$  /$$$$$$  /$$$$$$$/$$$$$$$/ 
+    $$$$$$$  $$ | $$ | __$$ | $$ | $$ |/    $$ | $$ | __$$ |  $$ |      $$ |   __$$ |  $$ $$    $$ $$      $$      \ 
+    $$ |__$$ $$ | $$ |/  $$ | $$ | $$ /$$$$$$$ | $$ |/  $$ \__$$ |      $$ \__/  $$ |  $$ $$$$$$$$/ $$$$$$  $$$$$$  |
+    $$    $$/$$ | $$  $$/$$ | $$ | $$ $$    $$ | $$  $$/$$    $$/       $$    $$/$$ |  $$ $$       /     $$/     $$/ 
+    $$$$$$$/ $$/   $$$$/ $$/  $$/  $$/ $$$$$$$/   $$$$/  $$$$$$/         $$$$$$/ $$/   $$/ $$$$$$$/$$$$$$$/$$$$$$$/  
+    
+    Lead Programmer   : May Draskovics (MayD524#8008)
+    Lead Art/Designer : Roscoe Lamontagne (scoe#2222)
 
+    Project Github: https://github.com/Bitmato-Studio/Bitmato-Chess
+    
+    "#);
     /* TODO: First time dialog checks */
-    let user_uuid = user_login();
+    let login_data = run_login();
+    let server_ip = get_server_ip();
 
     App::new()
         .add_plugins(DefaultPlugins
@@ -81,6 +111,7 @@ fn main() {
                 title: "Bitmatoes Chess".into(),
                 width: ((CELLSIZE * 8) + 128 + CELLSIZE * 6) as f32,
                 height: ((CELLSIZE * 8) + 128 + (CELLSIZE / 2))  as f32,
+                // 672
                 resizable: false,
                 ..default()
             },

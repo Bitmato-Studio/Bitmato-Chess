@@ -153,7 +153,7 @@ fn spawn_spash_screen(
         let entity = parent
             .spawn(ImageBundle {
                 style: Style {
-                    size: Size::new(Val::Px(500.0), Val::Auto),
+                    size: Size::new(Val::Px(1024.0), Val::Px(672.0)),
                     ..default()
                 },
                 image: video_player.image_handle.clone().into(),
@@ -178,7 +178,7 @@ fn play_video(
     time: Res<Time>,
     splash_entities: Query<Entity, With<LoadingAsset>>
 ) {
-    if time.delta_seconds() < 1./75. { return; }
+    if time.delta_seconds() < 1./20. { return; }
     for (video_player, entity) in video_player_query.iter_mut() {
         let video_player_non_send = video_resource.video_players.get_mut(&entity).unwrap();
         // read packets from stream until complete frame received

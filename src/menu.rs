@@ -35,7 +35,6 @@ fn start_button_clicked(
     }
 }
 
-
 fn quit_button_clicked(
     interactions: Query<&Interaction, (With<QuitButton>, Changed<Interaction>)>,
     mut exit: EventWriter<AppExit>,
@@ -89,7 +88,6 @@ fn spawn_main_menu(
         .add_child(start_button)
         .add_child(quit_button);
 }
-
 
 fn spawn_button(
     commands: &mut Commands,

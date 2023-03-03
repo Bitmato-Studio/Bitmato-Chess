@@ -3,6 +3,8 @@ use crate::chess_engine;
 use bevy::prelude::*;
 
 /* Lots of constants for us */
+pub const SPLIT_CHAR: &'static str = "╳";
+pub const CONFIG_FILE: &'static str = "assets/config/config.toml";
 pub const FONT_FILE: &'static str = "fonts/Eight-Bit_Madness.ttf";
 pub const CELLSIZE: i32 = 64; // TODO: Make this better (dynamic cell size)
 pub const BLACK_TEXT: Color = Color::DARK_GRAY;
@@ -44,7 +46,6 @@ pub struct Cell {
     pub position: chess_engine::Vec2,
     pub occupier: Option<chess_engine::GameEntity>,
 }
-
 
 /* Main Menu Components */
 #[derive(Component)]
