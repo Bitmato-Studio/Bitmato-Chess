@@ -1,5 +1,3 @@
-use std::f32::consts::PI;
-
 use bevy::prelude::*;
 
 use crate::components::*;
@@ -81,14 +79,6 @@ fn draw_board(
 
     game_state.last_state = game_state.board.to_fen();
     
-}
-
-fn network_system (
-    commands: Commands, 
-    mut global_structs: Query<&mut ClientNative, With<GlobalThing>>,
-) {
-    /* TODO: Network stuff :> */
-
 }
 
 // this only exists because bevy decides to out of order black (from Queen to left rook)
@@ -189,6 +179,7 @@ fn update_holding_text (
         "None".to_owned()
     };
 }
+
 fn setup(
     mut commands: Commands, 
     asset_server: Res<AssetServer>, 

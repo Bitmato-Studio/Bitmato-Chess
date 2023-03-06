@@ -6,9 +6,10 @@ use bevy::prelude::*;
 pub const SPLIT_CHAR: &'static str = "╳";
 pub const CONFIG_FILE: &'static str = "assets/config/config.toml";
 pub const FONT_FILE: &'static str = "fonts/Eight-Bit_Madness.ttf";
-pub const CELLSIZE: i32 = 64; // TODO: Make this better (dynamic cell size)
 pub const BLACK_TEXT: Color = Color::DARK_GRAY;
 pub const WHITE_TEXT: Color = Color::rgb(99., 103., 110.);
+pub const CELLSIZE: i32 = 64; // TODO: Make this better (dynamic cell size)
+pub const BUFFER_SIZE: i32 = 1024;
 
 #[derive(Component)]
 pub struct GlobalThing; // just a struct so we can grab game state everywhere;
@@ -22,6 +23,12 @@ pub struct CurrentPieceText;
 #[derive(Component)]
 pub struct CurrentFenText;
 
+#[derive(Component)]
+pub struct LobbyText;
+
+#[derive(Component)]
+pub struct LobbyPlayerCountText;
+
 #[derive(Component, Clone)]
 pub struct Piece;
 
@@ -33,12 +40,6 @@ pub struct GameState {
     pub last_state: String,
     pub player_team: chess_engine::TeamLoyalty, // someone has to decide eventually
     pub original_cell_index: u32,
-}
-
-// TODO: TCP Stuff
-#[derive(Component)]
-pub struct ClientNative {
-    pub tcp_client: network_handler::Client
 }
 
 #[derive(Component, Default, Clone, Copy, Debug)]
@@ -134,4 +135,44 @@ pub fn is_loaded (
             1
         },
     }
+}
+
+// moved from menu
+pub fn spawn_button(
+    commands: &mut Commands,
+    asset_server: &AssetServer,
+    text: &str,
+    color: Color,
+) -> Entity {
+    commands
+        .spawn(ButtonBundle {
+            style: Style {
+                size: Size::new(Val::Percent(65.0), Val::Percent(15.0)),
+                align_self: AlignSelf::Center,
+                justify_content: JustifyContent::Center,
+                margin: UiRect::all(Val::Percent(2.0)),
+                ..default()
+            },
+            background_color: color.into(),
+            ..default()
+        })
+        .with_children(|commands| {
+            commands.spawn(TextBundle {
+                style: Style {
+                    align_self: AlignSelf::Center,
+                    margin: UiRect::all(Val::Percent(3.0)),
+                    ..default()
+                },
+                text: Text::from_section(
+                    text,
+                    TextStyle {
+                        font: asset_server.load(FONT_FILE),
+                        font_size: 64.0,
+                        color: Color::BLACK,
+                    },
+                ),
+                ..default()
+            });
+        })
+        .id()
 }

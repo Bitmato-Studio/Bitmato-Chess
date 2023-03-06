@@ -1,6 +1,6 @@
 
 use bevy::{app::AppExit, prelude::*};
-use crate::components::{MenuUIroot, StartButton, QuitButton, FONT_FILE, AssetHandler};
+use crate::components::{MenuUIroot, StartButton, QuitButton, FONT_FILE, AssetHandler, spawn_button};
 use crate::game_settings;
 
 pub struct MainMenuPlugin;
@@ -29,8 +29,7 @@ fn start_button_clicked(
             commands.entity(root_entity).despawn_recursive();
 
             // Change Me! LogicalGameState::Game to LogicalGameState::Lobby - May
-            //game_state.set(game_settings::LogicalGameState::Lobby).unwrap();
-            game_state.set(game_settings::LogicalGameState::Game).unwrap();
+            game_state.set(game_settings::LogicalGameState::Lobby).unwrap();
         }
     }
 }
@@ -87,43 +86,4 @@ fn spawn_main_menu(
         })
         .add_child(start_button)
         .add_child(quit_button);
-}
-
-fn spawn_button(
-    commands: &mut Commands,
-    asset_server: &AssetServer,
-    text: &str,
-    color: Color,
-) -> Entity {
-    commands
-        .spawn(ButtonBundle {
-            style: Style {
-                size: Size::new(Val::Percent(65.0), Val::Percent(15.0)),
-                align_self: AlignSelf::Center,
-                justify_content: JustifyContent::Center,
-                margin: UiRect::all(Val::Percent(2.0)),
-                ..default()
-            },
-            background_color: color.into(),
-            ..default()
-        })
-        .with_children(|commands| {
-            commands.spawn(TextBundle {
-                style: Style {
-                    align_self: AlignSelf::Center,
-                    margin: UiRect::all(Val::Percent(3.0)),
-                    ..default()
-                },
-                text: Text::from_section(
-                    text,
-                    TextStyle {
-                        font: asset_server.load(FONT_FILE),
-                        font_size: 64.0,
-                        color: Color::BLACK,
-                    },
-                ),
-                ..default()
-            });
-        })
-        .id()
 }

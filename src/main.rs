@@ -9,8 +9,7 @@ use bevy::{prelude::*, winit::WinitWindows, window::WindowId};
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 use bevy_interact_2d::*;
 use winit::window::Icon;
-use std::io::Write;
-use std::fs::File;
+use std::io::{Write, Read};
 use image;
 
 /* Local Includes */
@@ -20,6 +19,7 @@ mod splash_screen;
 mod game_settings;
 mod chess_engine;
 mod game_screen;
+mod lobby_setup;
 mod components;
 mod menu;
 
@@ -49,6 +49,12 @@ struct Login {
     pub password: String,
 }
 
+/// It asks for a username and password, then returns a string with the username and password separated
+/// by a character
+/// 
+/// Returns:
+/// 
+/// A String
 fn run_login() -> String{
     extern crate rpassword;
     use rpassword::read_password; 
@@ -60,9 +66,8 @@ fn run_login() -> String{
     std::io::stdin().read_line(&mut login.username).unwrap();
 
     login.username = login.username.trim().to_string();
-    // TODO: Check if it follows discord
+    // TODO: Check if it follows discord name scheme
 
-    // TODO: Make this better lol
     print!("Enter a Password (NOT FOR DISCORD): ");
     std::io::stdout().flush().unwrap();
     login.password = read_password().unwrap();
@@ -74,14 +79,14 @@ fn get_server_ip() -> String {
     // TEMP function for debug etc etc
     let mut server_ip_addr = String::new();
 
-    print!("Enter DISCORD Username: ");
+    print!("Enter Server IP/URL: ");
     std::io::stdout().flush().unwrap();
     std::io::stdin().read_line(&mut server_ip_addr).unwrap();
 
     server_ip_addr = server_ip_addr.trim().to_string();
     server_ip_addr
 }
-
+/// The main function of the program. It is the first function that is called when the program is run.
 fn main() { 
     println!(r#" 
      _______  __   __                             __                      ______  __                                 
@@ -124,6 +129,8 @@ fn main() {
         .add_plugin(InteractionPlugin)
         .add_state(game_settings::LogicalGameState::Splash)
         
+        .insert_resource(network_handler::Client::create_client(server_ip, components::BUFFER_SIZE, login_data).unwrap())
+
         .add_startup_system(spawn_camera)
         .add_startup_system(set_window_icon)
 
@@ -131,9 +138,23 @@ fn main() {
         .add_plugin(splash_screen::SplashScreen)
         .add_plugin(menu::MainMenuPlugin)
         .add_plugin(game_screen::GameplayPlugin)
+        .add_plugin(lobby_setup::LobbySetup)
+        .add_startup_system(init_networking)
         .add_startup_system_to_stage(StartupStage::PostStartup, asset_loading)
 
         .run();
+}
+
+fn init_networking(mut cli: ResMut<network_handler::Client>) {
+    cli.recv().unwrap(); // void the first msg
+    
+    cli.login().unwrap();
+    println!("{}", cli.to_string());
+
+    cli.send_cmd("PING".to_string(), "hello world".to_string()).unwrap();
+    let data = cli.recv().unwrap();
+
+    println!("Data: {}", data);
 }
 
 fn asset_loading(mut commands: Commands, assets: Res<AssetServer>) {

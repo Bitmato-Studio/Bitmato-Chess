@@ -178,7 +178,7 @@ fn play_video(
     time: Res<Time>,
     splash_entities: Query<Entity, With<LoadingAsset>>
 ) {
-    if time.delta_seconds() < 1./20. { return; }
+    //if time.delta_seconds() < 1./20. { return; }
     for (video_player, entity) in video_player_query.iter_mut() {
         let video_player_non_send = video_resource.video_players.get_mut(&entity).unwrap();
         // read packets from stream until complete frame received
