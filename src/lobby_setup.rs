@@ -28,10 +28,12 @@ impl Plugin for LobbySetup {
 }
 
 fn during_update(
+    mut commands: Commands,
     mut timer: ResMut<LocalTimer>,
     mut player_text: Query<&mut Text, With<LobbyPlayerCountText>>,
     mut game_state: ResMut<State<LogicalGameState>>,
     mut cli: ResMut<Client>,
+    ui_entities: Query<Entity, With<LobbyText>>,
     time: Res<Time>,
 ) {
 
@@ -45,8 +47,13 @@ fn during_update(
     cli.send("TP".to_string()).unwrap();
     let new_data = cli.recv().unwrap();
 
-    if new_data.contains(&"MATCHES") {
+    if new_data.contains(&"MATCH") {
         // we got in a match
+        // kill the UI text
+        for ent in ui_entities.iter() {
+            commands.entity(ent).despawn_recursive();
+        }
+        // switch to game screen
         game_state.set(LogicalGameState::Game).unwrap();
         return;
     }

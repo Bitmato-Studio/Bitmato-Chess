@@ -15,7 +15,7 @@ use image;
 /* Local Includes */
 mod network_handler;
 mod config_handler;
-mod splash_screen;
+// mod splash_screen;
 mod game_settings;
 mod chess_engine;
 mod game_screen;
@@ -127,7 +127,7 @@ fn main() {
         )
         //.add_plugin(WorldInspectorPlugin::new())
         .add_plugin(InteractionPlugin)
-        .add_state(game_settings::LogicalGameState::Splash)
+        .add_state(game_settings::LogicalGameState::Menu)
         
         .insert_resource(network_handler::Client::create_client(server_ip, components::BUFFER_SIZE, login_data).unwrap())
 
@@ -135,7 +135,7 @@ fn main() {
         .add_startup_system(set_window_icon)
 
         // local plugins
-        .add_plugin(splash_screen::SplashScreen)
+        //.add_plugin(splash_screen::SplashScreen)
         .add_plugin(menu::MainMenuPlugin)
         .add_plugin(game_screen::GameplayPlugin)
         .add_plugin(lobby_setup::LobbySetup)

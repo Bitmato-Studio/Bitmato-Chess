@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::components::*;
 use crate::game_settings;
 use crate::chess_engine;
+use crate::network_handler;
 use bevy_interact_2d::*;
 
 pub struct GameplayPlugin;
@@ -47,7 +48,6 @@ fn draw_board(
     let mut game_state = game_object.single_mut();
     let x_pos = (CELLSIZE * -4) + (CELLSIZE/2) - (CELLSIZE * 4) + (CELLSIZE / 2);
     let y_pos = (CELLSIZE * 4) - (CELLSIZE/2) + CELLSIZE;
-    
     
     for entity in pieces.iter() {
         commands.entity(entity).despawn();
@@ -102,8 +102,7 @@ fn interaction_system(
 
     let mut game_state = global_structs.single_mut();
 
-    // FIXME (LATER) check teams again
-    if !mouse_button_input.just_released(MouseButton::Left) { //} || game_state.player_team != game_state.board.current_turn  {
+    if !mouse_button_input.just_released(MouseButton::Left) || game_state.player_team != game_state.board.current_turn  {
         return;
     }
     let mut index = 0;
@@ -180,19 +179,32 @@ fn update_holding_text (
     };
 }
 
+fn get_player_color(m_data: &MatchData, net_cli: &network_handler::Client) -> chess_engine::TeamLoyalty {
+    if net_cli.user_id == m_data.player_1 {
+        chess_engine::TeamLoyalty::WHITE
+    } else {
+        chess_engine::TeamLoyalty::BLACK
+    }
+}
+
 fn setup(
     mut commands: Commands, 
     asset_server: Res<AssetServer>, 
     mut meshes: ResMut<Assets<Mesh>>, 
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut client: ResMut<network_handler::Client>,
     game_assets: Res<AssetHandler>
 ) {
-            
+    
+    client.send("GMD".to_string()).unwrap();
+    let match_str_data = client.recv().unwrap();
+    let data: MatchData = serde_json::from_str(&match_str_data).unwrap();
+
     let game_state = GameState {
         board: chess_engine::Board::create_board(chess_engine::DEFAULTFEN.into()),
         selected: None,
         last_state: String::new(),
-        player_team: chess_engine::TeamLoyalty::BLACK, // eventually have some matchmaking system decide
+        player_team: get_player_color(&data, &client), // eventually have some matchmaking system decide
         original_cell_index: 0,
     };
 

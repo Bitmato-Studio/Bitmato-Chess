@@ -1,6 +1,8 @@
 use crate::network_handler;
 use crate::chess_engine;
 use bevy::prelude::*;
+use serde::Deserialize;
+use serde::Serialize;
 
 /* Lots of constants for us */
 pub const SPLIT_CHAR: &'static str = "╳";
@@ -175,4 +177,13 @@ pub fn spawn_button(
             });
         })
         .id()
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct MatchData {
+    pub match_id: String,
+    pub player_1: String,
+    pub player_2: String,
+    pub time_started: f32,
+    pub time_ended: f32,
 }
