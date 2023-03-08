@@ -184,6 +184,7 @@ pub struct MatchData {
     pub match_id: String,
     pub player_1: String,
     pub player_2: String,
+    pub last_move: String,
     pub time_started: f32,
     pub time_ended: f32,
 }

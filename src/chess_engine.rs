@@ -314,7 +314,6 @@ pub fn move_entity(board: &mut Board, original:Position, new_pos:Position) {
     };
 }
 
-
 impl Board {
 
     /* For Debugging  */
@@ -371,6 +370,10 @@ impl Board {
         
 
         return out;
+    }
+
+    pub fn update_turn(&mut self, fen:String) {
+        self.current_turn = if fen.chars().last().unwrap() == 'w' { TeamLoyalty::WHITE } else { TeamLoyalty::BLACK };
     }
 
     pub fn create_board(fen: String) -> Self {

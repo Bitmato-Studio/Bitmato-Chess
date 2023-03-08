@@ -14,7 +14,6 @@ use image;
 
 /* Local Includes */
 mod network_handler;
-mod config_handler;
 // mod splash_screen;
 mod game_settings;
 mod chess_engine;

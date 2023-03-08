@@ -71,7 +71,11 @@ impl Client {
     pub fn recv(&mut self) -> std::io::Result<String> {
         let mut buff = vec![0_u8; self.buff_size];
         self.stream.read(&mut buff)?;
-        Ok(String::from_utf8(buff.to_vec()).unwrap())
+        let out_data = String::from_utf8(buff.to_vec()).unwrap();
+        
+        println!("Recv: '{}'", out_data);
+        
+        Ok(out_data)
     }
 
     pub fn to_string(&self) -> String {

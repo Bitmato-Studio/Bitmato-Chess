@@ -4,7 +4,9 @@ use crate::components::*;
 use crate::game_settings;
 use crate::chess_engine;
 use crate::network_handler;
+use crate::network_handler::Client;
 use bevy_interact_2d::*;
+use std::str::FromStr;
 
 pub struct GameplayPlugin;
 
@@ -14,6 +16,7 @@ impl Plugin for GameplayPlugin {
             .add_system_set(SystemSet::on_enter(game_settings::LogicalGameState::Game).with_system(setup))
             .add_system_set(SystemSet::on_update(game_settings::LogicalGameState::Game)
                 .with_system(interaction_system)
+                .with_system(network_handle) // most important system
                 .with_system(draw_board) // this must come before update_board (otherwise causes fun race condition)
                 .with_system(update_board)
                 .with_system(update_fen_text)
@@ -23,6 +26,32 @@ impl Plugin for GameplayPlugin {
     }
 }
 
+fn network_handle(
+    mut game_object: Query<&mut GameState, With<GlobalThing>>,
+    mut client: ResMut<Client> ) {
+    
+    client.send("GLM".to_string()).unwrap(); // get the last move
+    let result = client.recv().unwrap();
+
+
+    // time to parse 😔
+    let data_points: Vec<&str> = result.split(":").collect();
+
+    let origin = chess_engine::Vec2 {
+        x: FromStr::from_str(data_points[0]).unwrap(),
+        y: FromStr::from_str(data_points[1]).unwrap(),
+    };
+
+    let dest = chess_engine::Vec2 {
+        x: FromStr::from_str(data_points[2]).unwrap(),
+        y: FromStr::from_str(data_points[3]).unwrap(),
+    };
+
+    let mut game_state = game_object.single_mut();
+
+    chess_engine::move_entity(&mut game_state.board, origin, dest);
+
+}
 
 fn update_board(
     game_object: Query<&GameState, With<GlobalThing>>,
@@ -78,7 +107,6 @@ fn draw_board(
     }
 
     game_state.last_state = game_state.board.to_fen();
-    
 }
 
 // this only exists because bevy decides to out of order black (from Queen to left rook)
@@ -97,14 +125,17 @@ fn interaction_system(
     mouse_button_input: Res<Input<MouseButton>>,
     interaction_state: Res<InteractionState>,
     cells_structs: Query<&mut Cell, With<Cell>>,
-    mut global_structs: Query<&mut GameState, With<GlobalThing>> 
+    mut global_structs: Query<&mut GameState, With<GlobalThing>>,
+    mut client: ResMut<network_handler::Client>
 ) {
 
     let mut game_state = global_structs.single_mut();
 
     if !mouse_button_input.just_released(MouseButton::Left) || game_state.player_team != game_state.board.current_turn  {
+        /* Check for fen updates */
         return;
     }
+
     let mut index = 0;
 
     // no new fen yet
@@ -122,10 +153,23 @@ fn interaction_system(
             
             // error check (make sure not none)
             let cell_original = game_state.original_cell_index;
-            chess_engine::move_entity(&mut game_state.board, cells[cell_original as usize].position, cells[index as usize].position);
-            // println!("{}", game_state.board.to_string());
-            // println!("{}", game_state.board.to_fen());
+            
+            let origin = cells[cell_original as usize].position;
+            let destination = cells[index as usize].position;
+
+            // move_entity also changes current team
+            chess_engine::move_entity(&mut game_state.board, origin, destination);
             game_state.selected = None;
+
+            // we need to also send 
+            // the UP command along with UF
+            // TODO: Send UP & UF in one cmd?
+
+            client.send_cmd("UF".to_string(), game_state.board.to_fen()).unwrap();
+
+            // this is the most important part (UF is really secondary in this)
+            let msg = format!("{}:{}:{}:{}", origin.x, origin.y, destination.x, destination.y);
+            client.send_cmd("UP".to_string(), msg).unwrap();
             
             return;
         } else {
@@ -159,7 +203,7 @@ fn update_turn_text(
 
 fn update_fen_text(
     global_thing: Query<&GameState, With<GlobalThing>>,
-    mut current_fen_query: Query<&mut Text, With<CurrentFenText>>
+    mut current_fen_query: Query<&mut Text, With<CurrentFenText>>,
 ) {
     let game_state = global_thing.single();
     let mut current_fen_text = current_fen_query.single_mut();
@@ -198,6 +242,17 @@ fn setup(
     
     client.send("GMD".to_string()).unwrap();
     let match_str_data = client.recv().unwrap();
+    /* FIXME
+        thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: Error("expected value", line: 1, column: 1)', src\game_screen.rs:245:65
+        note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+        thread 'main' panicked at 'called `Option::unwrap()` on a `None` value', C:\Users\Cross\.cargo\registry\src\github.com-1ecc6299db9ec823\bevy_tasks-0.9.1\src\task_pool.rs:273:45
+     */
+
+    // FIXME: Future me Check if the first char is a '{'
+    // The last TP request can come in AFTER the GMD reset
+    // so the TP response is sitting in the queue.
+    // so dump the data till we get what we want
+    
     let data: MatchData = serde_json::from_str(&match_str_data).unwrap();
 
     let game_state = GameState {
