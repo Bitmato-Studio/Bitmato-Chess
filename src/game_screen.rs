@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use crate::chess_engine::TeamLoyalty;
 use crate::components::*;
 use crate::game_settings;
 use crate::chess_engine;
@@ -7,6 +8,13 @@ use crate::network_handler;
 use crate::network_handler::Client;
 use bevy_interact_2d::*;
 use std::str::FromStr;
+use std::time::Duration;
+
+#[derive(Resource)]
+pub struct NetworkTimer {
+    pub timer: Timer,
+}
+
 
 pub struct GameplayPlugin;
 
@@ -22,17 +30,29 @@ impl Plugin for GameplayPlugin {
                 .with_system(update_fen_text)
                 .with_system(update_holding_text)
                 .with_system(update_turn_text)
-            );
+            ).insert_resource(NetworkTimer {
+                timer: Timer::new(Duration::from_secs(2), TimerMode::Repeating)
+            });
     }
 }
 
 fn network_handle(
     mut game_object: Query<&mut GameState, With<GlobalThing>>,
-    mut client: ResMut<Client> ) {
+    mut client: ResMut<Client>,
+    mut net_timer: ResMut<NetworkTimer>,
+    time: Res<Time>
+) {
     
+    net_timer.timer.tick(time.delta());
+
+    // so we don't make a ton of requests
+    if !net_timer.timer.finished() { return; }
+
     client.send("GLM".to_string()).unwrap(); // get the last move
     let result = client.recv().unwrap();
 
+    // ignore these messages from the server (CAN AND WILL Cause issues)
+    if result == "START_OF_MATCH" || result == "UPDATED" { return; } // nothing to do here (no moves yet)
 
     // time to parse 😔
     let data_points: Vec<&str> = result.split(":").collect();
@@ -132,7 +152,6 @@ fn interaction_system(
     let mut game_state = global_structs.single_mut();
 
     if !mouse_button_input.just_released(MouseButton::Left) || game_state.player_team != game_state.board.current_turn  {
-        /* Check for fen updates */
         return;
     }
 
@@ -207,7 +226,7 @@ fn update_fen_text(
 ) {
     let game_state = global_thing.single();
     let mut current_fen_text = current_fen_query.single_mut();
-    current_fen_text.sections[1].value = format!("{:?}", game_state.board.to_fen());
+    current_fen_text.sections[1].value = format!("{:?}", game_state.player_team);
 }
 
 fn update_holding_text (
@@ -239,27 +258,29 @@ fn setup(
     mut client: ResMut<network_handler::Client>,
     game_assets: Res<AssetHandler>
 ) {
-    
+    client.recv().unwrap();
     client.send("GMD".to_string()).unwrap();
-    let match_str_data = client.recv().unwrap();
-    /* FIXME
-        thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: Error("expected value", line: 1, column: 1)', src\game_screen.rs:245:65
+    /* FIXME: Yet another error
+        thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: Error("trailing characters", line: 1, column: 186)', src\game_screen.rs:262:65
         note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
         thread 'main' panicked at 'called `Option::unwrap()` on a `None` value', C:\Users\Cross\.cargo\registry\src\github.com-1ecc6299db9ec823\bevy_tasks-0.9.1\src\task_pool.rs:273:45
-     */
-
-    // FIXME: Future me Check if the first char is a '{'
-    // The last TP request can come in AFTER the GMD reset
-    // so the TP response is sitting in the queue.
-    // so dump the data till we get what we want
     
-    let data: MatchData = serde_json::from_str(&match_str_data).unwrap();
+    */
+    let match_str_data = loop {
+        let data = client.recv().unwrap();
+        if data.chars().next().unwrap() != '{' {
+            continue;
+        }
+        break data;
+    };
+    let data: MatchData = serde_json::from_str(&match_str_data.trim()).unwrap();
+    let player_color = get_player_color(&data, &client);
 
     let game_state = GameState {
         board: chess_engine::Board::create_board(chess_engine::DEFAULTFEN.into()),
         selected: None,
         last_state: String::new(),
-        player_team: get_player_color(&data, &client), // eventually have some matchmaking system decide
+        player_team: player_color,
         original_cell_index: 0,
     };
 
@@ -302,9 +323,9 @@ fn setup(
             color_index += 1;
             let obj = game_state.board.entity_at(chess_engine::Vec2 { x: col, y: row }).clone();
 
-            if obj.is_some() {
-                println!("{} => {:?}", id.index(), obj.unwrap());
-            }
+            //if obj.is_some() {
+            //    println!("{} => {:?}", id.index(), obj.unwrap());
+            //}
         }
     }
 
@@ -373,10 +394,37 @@ fn setup(
         CurrentPieceText
     ));
 
+    client.send_cmd("GPN".to_string(), if player_color == TeamLoyalty::WHITE { data.player_2 } else { data.player_1 }).unwrap();
+    let op_name = client.recv().unwrap();
+
+
     commands.spawn((
         TextBundle::from_sections([
             TextSection::new( 
-                "Current Fen: ",
+                format!("Opponent: {}", op_name),
+                TextStyle {
+                    font: game_assets.global_font.clone(),
+                    font_size: 30.0,
+                    color: Color::WHITE,
+                },
+            ),
+        ]).with_text_alignment(TextAlignment::BOTTOM_LEFT)
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                bottom: Val::Px(500.0),
+                left: Val::Px(600.0),
+                ..default()
+            },
+            ..default()
+        }),
+        CurrentMatchOpponent
+    ));
+
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new( 
+                "Your Color: ",
                 TextStyle {
                     font: game_assets.global_font.clone(),
                     font_size: 30.0,

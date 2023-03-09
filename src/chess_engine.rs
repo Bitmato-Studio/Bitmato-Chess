@@ -1,3 +1,8 @@
+/*
+    TODO: Check for check(mate)
+    TODO: Check for game over condition
+ */
+
 use std::cmp::Ordering;
 
 pub const DEFAULTFEN: &str = "rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w";
@@ -252,8 +257,12 @@ fn validate_diagonal(board: &Board, start: Vec2, end: Vec2, piece: GameEntity) -
     let mut x_iter = start.x..end.x;
     println!("Range: {:?}", x_iter);
     for y in start.y..end.y {
+        /* FIXME: Issue with moving downwards diagonal (Repeatable)
+            thread 'Compute Task Pool (1)' panicked at 'Not enough X', src\chess_engine.rs:255:31
+            note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+            thread 'main' panicked at 'called `Option::unwrap()` on a `None` value', C:\Users\Cross\.cargo\registry\src\github.com-1ecc6299db9ec823\bevy_tasks-0.9.1\src\task_pool.rs:273:45
+        */
         let x = x_iter.next().expect("Not enough X");
-        println!("({},{})", x, y);
         let new_pos = Vec2 {
             y,
             x
@@ -271,12 +280,11 @@ fn validate_diagonal(board: &Board, start: Vec2, end: Vec2, piece: GameEntity) -
 }
 
 pub fn move_entity(board: &mut Board, original:Position, new_pos:Position) {
-    let mut ent = board.cells[original.y as usize][original.x as usize].occupier.clone().unwrap();
+    let tmp_ent = board.cells[original.y as usize][original.x as usize].occupier.clone();
 
-    //self.check_legal_move(ent, original, new_pos);
+    if tmp_ent.is_none() { return; }
+    let mut ent = tmp_ent.unwrap();
     
-    let new_cell = &board.cells[new_pos.y as usize][new_pos.x as usize];
-
     let mut is_legal =   validate(board, original, new_pos, ent);
 
     if ent.entity_type != EntityType::KNIGHT && is_legal {

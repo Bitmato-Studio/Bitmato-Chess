@@ -47,14 +47,14 @@ impl Client {
     }
 
     pub fn send(&mut self, data: String) -> std::io::Result<()> {
-        println!("Sending: {}", data);
+        println!("network_handler::client.send() ->: {}", data);
         self.stream.write(&data.as_bytes())?;
         Ok(())
     }
 
     pub fn send_cmd(&mut self, cmd: String, data:String) -> std::io::Result<()> {
         let cmd_data = cmd + SPLIT_CHAR + &data;
-        println!("Sending: {}", cmd_data);
+        println!("network_handler::client.send_cmd() -> Sending: {}", cmd_data);
         self.stream.write(&(cmd_data).as_bytes())?;
         Ok(())
     }
@@ -69,11 +69,13 @@ impl Client {
     }
 
     pub fn recv(&mut self) -> std::io::Result<String> {
+        println!("network_handler::client.recv() -> Waiting for response...");
         let mut buff = vec![0_u8; self.buff_size];
         self.stream.read(&mut buff)?;
-        let out_data = String::from_utf8(buff.to_vec()).unwrap();
+        let mut out_data = String::from_utf8(buff.to_vec()).expect("network_handler::client.recv() -> Found invalid UTF-8");
+        out_data = out_data.trim_matches(char::from(0)).to_string();
         
-        println!("Recv: '{}'", out_data);
+        println!("network_handler::client.recv() -> Recv: '{}'", out_data);
         
         Ok(out_data)
     }

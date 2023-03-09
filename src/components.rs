@@ -26,6 +26,9 @@ pub struct CurrentPieceText;
 pub struct CurrentFenText;
 
 #[derive(Component)]
+pub struct CurrentMatchOpponent;
+
+#[derive(Component)]
 pub struct LobbyText;
 
 #[derive(Component)]
@@ -33,7 +36,6 @@ pub struct LobbyPlayerCountText;
 
 #[derive(Component, Clone)]
 pub struct Piece;
-
 
 #[derive(Component, Default, Clone, Debug)]
 pub struct GameState {

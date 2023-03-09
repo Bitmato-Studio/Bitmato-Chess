@@ -22,7 +22,7 @@ impl Plugin for LobbySetup {
                 // add other update resources
             )
             .insert_resource(LocalTimer {
-                timer: Timer::new(Duration::from_secs(5), TimerMode::Repeating),
+                timer: Timer::new(Duration::from_secs(2), TimerMode::Repeating),
             });
     }
 }
