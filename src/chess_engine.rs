@@ -3,7 +3,9 @@
     TODO: Check for game over condition
  */
 
-use std::cmp::Ordering;
+use std::{cmp::Ordering, ops::Range};
+
+use crate::components::create_range_vector;
 
 pub const DEFAULTFEN: &str = "rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w";
 
@@ -253,16 +255,24 @@ fn validate_diagonal(board: &Board, start: Vec2, end: Vec2, piece: GameEntity) -
     // triangles
     if start.y - end.y == 0 || start.x - end.x == 0 { return false; } // return false if we don't move diagonally
     
-    // issue when going down and left... yay
-    let mut x_iter = start.x..end.x;
-    println!("Range: {:?}", x_iter);
-    for y in start.y..end.y {
+    // issue when going down and left... yay { hopefully this fixes it}
+    let x_iter = create_range_vector(start.x, end.x);
+    let y_iter = create_range_vector(start.y, end.y);
+
+    for y in y_iter {
         /* FIXME: Issue with moving downwards diagonal (Repeatable)
             thread 'Compute Task Pool (1)' panicked at 'Not enough X', src\chess_engine.rs:255:31
             note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
             thread 'main' panicked at 'called `Option::unwrap()` on a `None` value', C:\Users\Cross\.cargo\registry\src\github.com-1ecc6299db9ec823\bevy_tasks-0.9.1\src\task_pool.rs:273:45
         */
-        let x = x_iter.next().expect("Not enough X");
+        let tx = x_iter.get((start.y-y) as usize);
+    
+        if tx.is_none() {
+            return true;
+        }
+
+        let x = *tx.unwrap();
+
         let new_pos = Vec2 {
             y,
             x

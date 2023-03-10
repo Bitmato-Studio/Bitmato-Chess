@@ -190,3 +190,17 @@ pub struct MatchData {
     pub time_started: f32,
     pub time_ended: f32,
 }
+
+pub fn create_range_vector(x1: i32, x2: i32) -> Vec<i32> {
+    let mut range_vec: Vec<i32> = Vec::new();
+    if x1 > x2 {
+        for i in (x2..=x1).rev() {
+            range_vec.push(i);
+        }
+    } else {
+        for i in x1..=x2 {
+            range_vec.push(i);
+        }
+    }
+    range_vec
+}

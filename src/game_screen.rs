@@ -264,7 +264,6 @@ fn setup(
         thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: Error("trailing characters", line: 1, column: 186)', src\game_screen.rs:262:65
         note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
         thread 'main' panicked at 'called `Option::unwrap()` on a `None` value', C:\Users\Cross\.cargo\registry\src\github.com-1ecc6299db9ec823\bevy_tasks-0.9.1\src\task_pool.rs:273:45
-    
     */
     let match_str_data = loop {
         let data = client.recv().unwrap();

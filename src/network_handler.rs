@@ -1,10 +1,13 @@
 use std::io::prelude::*;
+use std::{thread, time};
 use std::net::TcpStream;
 use bevy::prelude::*;
 use uuid::Uuid;
 use std::str;
 
 use crate::components::*;
+
+const SEND_DELAY: time::Duration = time::Duration::from_millis(10);
 
 #[derive(Resource)]
 pub struct Client {
@@ -48,6 +51,7 @@ impl Client {
 
     pub fn send(&mut self, data: String) -> std::io::Result<()> {
         println!("network_handler::client.send() ->: {}", data);
+        thread::sleep(SEND_DELAY); // just so we dont have collisions
         self.stream.write(&data.as_bytes())?;
         Ok(())
     }
