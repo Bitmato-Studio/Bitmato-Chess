@@ -937,6 +937,7 @@ dependencies = [
  "serde_json",
  "toml 0.7.2",
  "uuid",
+ "winapi",
  "winit",
  "winres",
 ]

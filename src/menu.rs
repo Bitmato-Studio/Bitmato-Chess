@@ -1,6 +1,6 @@
 
 use bevy::{app::AppExit, prelude::*};
-use crate::components::{MenuUIroot, StartButton, QuitButton, FONT_FILE, AssetHandler, spawn_button};
+use crate::components::*;
 use crate::game_settings;
 
 pub struct MainMenuPlugin;
@@ -47,9 +47,14 @@ fn quit_button_clicked(
 
 fn spawn_main_menu(
     mut commands: Commands, 
+    game_objects: Query<Entity, With<GameScreenObject>>,
     asset_server: Res<AssetServer>,
     assets: Res<AssetHandler>
 ) {
+    for ent in game_objects.iter() {
+        commands.entity(ent).despawn_recursive();
+    }
+
     let start_button = spawn_button(&mut commands, &asset_server, "Start Game", Color::RED);
     commands.entity(start_button).insert(StartButton);
 

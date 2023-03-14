@@ -10,4 +10,5 @@ pub enum LogicalGameState {
     Loading, // loading screen
     Game,    // the actual game play screen
     Error,   // Something went wrong
+    GameOver,// When a match is over
 }

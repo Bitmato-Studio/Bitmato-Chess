@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use uuid::Uuid;
 use std::str;
 
-use crate::components::*;
+use crate::components::{*, self};
 
 const SEND_DELAY: time::Duration = time::Duration::from_millis(10);
 
@@ -50,7 +50,7 @@ impl Client {
     }
 
     pub fn send(&mut self, data: String) -> std::io::Result<()> {
-        println!("network_handler::client.send() ->: {}", data);
+        println!("network_handler::client.send() -> {}", data);
         thread::sleep(SEND_DELAY); // just so we dont have collisions
         self.stream.write(&data.as_bytes())?;
         Ok(())
@@ -58,7 +58,7 @@ impl Client {
 
     pub fn send_cmd(&mut self, cmd: String, data:String) -> std::io::Result<()> {
         let cmd_data = cmd + SPLIT_CHAR + &data;
-        println!("network_handler::client.send_cmd() -> Sending: {}", cmd_data);
+        println!("network_handler::Client::send_cmd() -> Sending: {}", cmd_data);
         self.stream.write(&(cmd_data).as_bytes())?;
         Ok(())
     }

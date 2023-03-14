@@ -1,7 +1,5 @@
 /**
  * TODO: Move CLI interface to FUI https://github.com/xliiv/fui
- * 
- * 
  */
 
 #[allow(unused)]
@@ -128,7 +126,6 @@ fn main() {
             .build()
             .add_before::<bevy::asset::AssetPlugin, _>(EmbeddedAssetPlugin)
         )
-        //.add_plugin(WorldInspectorPlugin::new())
         .add_plugin(InteractionPlugin)
         .add_state(game_settings::LogicalGameState::Menu)
         

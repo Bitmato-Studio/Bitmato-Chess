@@ -208,7 +208,7 @@ pub fn validate(board: &Board, from: Vec2, to:Vec2, piece: GameEntity) -> bool {
             return (dx == 2 && dy == 1) || (dx == 1 && dy == 2);
         },
         EntityType::QUEEN => {
-            return (dx == dy && dx != 0) || (dx == 0 && dy != 0) || (dx == 0 && dy != 0);
+            return (dx == dy && dx != 0) || (dx == 0 && dy != 0) || (dx != 0 && dy == 0);
         },
         EntityType::KING => {
             return dx == 1 || dy == 1;
@@ -260,11 +260,6 @@ fn validate_diagonal(board: &Board, start: Vec2, end: Vec2, piece: GameEntity) -
     let y_iter = create_range_vector(start.y, end.y);
 
     for y in y_iter {
-        /* FIXME: Issue with moving downwards diagonal (Repeatable)
-            thread 'Compute Task Pool (1)' panicked at 'Not enough X', src\chess_engine.rs:255:31
-            note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
-            thread 'main' panicked at 'called `Option::unwrap()` on a `None` value', C:\Users\Cross\.cargo\registry\src\github.com-1ecc6299db9ec823\bevy_tasks-0.9.1\src\task_pool.rs:273:45
-        */
         let tx = x_iter.get((start.y-y) as usize);
     
         if tx.is_none() {
@@ -289,7 +284,7 @@ fn validate_diagonal(board: &Board, start: Vec2, end: Vec2, piece: GameEntity) -
     true
 }
 
-pub fn move_entity(board: &mut Board, original:Position, new_pos:Position) {
+pub fn move_entity(board: &mut Board, original:Position, new_pos:Position, ignore_checks:bool) {
     let tmp_ent = board.cells[original.y as usize][original.x as usize].occupier.clone();
 
     if tmp_ent.is_none() { return; }
@@ -302,15 +297,26 @@ pub fn move_entity(board: &mut Board, original:Position, new_pos:Position) {
             true
         } else { 
             if !validate_horizontal(board, original, new_pos, ent) {
-                println!("Horizontal False");
+                println!("chess_engine::move_entity() -> Horizontal False");
                 false
             } else if !validate_vertical(board, original, new_pos, ent) {
-                println!("Vertical False");
+                println!("chess_engine::move_entity() -> Vertical False");
                 false
             } else {
                 true
             }
         };
+    }
+
+    let tmp_ent_at = board.cells[new_pos.y as usize][new_pos.x as usize].occupier.clone();
+
+    if tmp_ent_at.is_some() {
+        // check if it's a king
+        let check_ent = tmp_ent_at.unwrap();
+        if check_ent.entity_type == EntityType::KING {
+            // game over as the king is dead
+            board.is_checkmate = true;
+        }
     }
 
     if !is_legal {
@@ -324,6 +330,10 @@ pub fn move_entity(board: &mut Board, original:Position, new_pos:Position) {
 
     board.cells[new_pos.y as usize][new_pos.x as usize].update(ent);
     board.cells[original.y as usize][original.x as usize].make_empty();
+
+    if board.is_checkmate { 
+        return;
+    }
 
     board.current_turn = if board.current_turn == TeamLoyalty::WHITE {
         TeamLoyalty::BLACK

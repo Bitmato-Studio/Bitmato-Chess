@@ -1,9 +1,15 @@
+extern crate winapi;
+
+use std::ptr::null_mut as NULL;
+use winapi::um::winuser;
+
 use bevy::prelude::*;
 
 use crate::chess_engine::TeamLoyalty;
 use crate::components::*;
 use crate::game_settings;
 use crate::chess_engine;
+use crate::game_settings::LogicalGameState;
 use crate::network_handler;
 use crate::network_handler::Client;
 use bevy_interact_2d::*;
@@ -14,7 +20,6 @@ use std::time::Duration;
 pub struct NetworkTimer {
     pub timer: Timer,
 }
-
 
 pub struct GameplayPlugin;
 
@@ -40,6 +45,7 @@ fn network_handle(
     mut game_object: Query<&mut GameState, With<GlobalThing>>,
     mut client: ResMut<Client>,
     mut net_timer: ResMut<NetworkTimer>,
+    mut g_state: ResMut<State<LogicalGameState>>,
     time: Res<Time>
 ) {
     
@@ -57,19 +63,70 @@ fn network_handle(
     // time to parse 😔
     let data_points: Vec<&str> = result.split(":").collect();
 
+    let (x1, y1) = {
+        let x = match FromStr::from_str(data_points[0]) {
+            Ok(n) => n,
+            Err(_) => -1,
+        };
+
+        let y = match FromStr::from_str(data_points[1]) {
+            Ok(n) => n,
+            Err(_) => -1,
+        };
+
+        (x, y)
+    };
+
+    let (x2, y2) = {
+        let x = match FromStr::from_str(data_points[0]) {
+            Ok(n) => n,
+            Err(_) => -1,
+        };
+
+        let y = match FromStr::from_str(data_points[1]) {
+            Ok(n) => n,
+            Err(_) => -1,
+        };
+
+        (x, y)
+    };
+
+    if x1 < 0 || x2 < 0 || y1 < 0 || y2 < 0 {
+        //bad input
+        return;
+    }
+
     let origin = chess_engine::Vec2 {
-        x: FromStr::from_str(data_points[0]).unwrap(),
-        y: FromStr::from_str(data_points[1]).unwrap(),
+        x: x1,
+        y: y1,
     };
 
     let dest = chess_engine::Vec2 {
-        x: FromStr::from_str(data_points[2]).unwrap(),
-        y: FromStr::from_str(data_points[3]).unwrap(),
+        x: x2,
+        y: y2,
     };
 
     let mut game_state = game_object.single_mut();
 
-    chess_engine::move_entity(&mut game_state.board, origin, dest);
+    chess_engine::move_entity(&mut game_state.board, origin, dest, true);
+
+    let l_title: Vec<u16> = "\u{265A} Bitmato Chess".encode_utf16().collect();
+    if game_state.board.is_checkmate && game_state.player_team != game_state.board.current_turn {
+        // this player lost
+        let l_msg: Vec<u16> = "You have lost!".encode_utf16().collect();
+        unsafe {
+            winuser::MessageBoxW(NULL(), l_msg.as_ptr(), l_title.as_ptr(), winuser::MB_OK | winuser::MB_ICONINFORMATION);
+        }
+        g_state.set(LogicalGameState::Menu).unwrap();
+    } else if game_state.board.is_checkmate && game_state.player_team == game_state.board.current_turn {
+        // this player won
+        let l_msg: Vec<u16> = "You have won!".encode_utf16().collect();
+        client.send("EM".to_string()).unwrap(); // end the match
+        unsafe {
+            winuser::MessageBoxW(NULL(), l_msg.as_ptr(), l_title.as_ptr(), winuser::MB_OK | winuser::MB_ICONINFORMATION);
+        }
+        g_state.set(LogicalGameState::Menu).unwrap();
+    }
 
 }
 
@@ -123,7 +180,8 @@ fn draw_board(
                 ..default()
             },
             ..default()
-        }).insert(Piece {});
+        }).insert(Piece {})
+        .insert(GameScreenObject);
     }
 
     game_state.last_state = game_state.board.to_fen();
@@ -131,6 +189,8 @@ fn draw_board(
 
 // this only exists because bevy decides to out of order black (from Queen to left rook)
 fn ecs_fix(index: u32) -> u32 {
+    // FIXME: Issue with top left knight and rook :>
+    // Black Rooks and Knight
     match index {
         6 => 2,
         4 => 3,
@@ -177,7 +237,7 @@ fn interaction_system(
             let destination = cells[index as usize].position;
 
             // move_entity also changes current team
-            chess_engine::move_entity(&mut game_state.board, origin, destination);
+            chess_engine::move_entity(&mut game_state.board, origin, destination, false);
             game_state.selected = None;
 
             // we need to also send 
@@ -260,11 +320,6 @@ fn setup(
 ) {
     client.recv().unwrap();
     client.send("GMD".to_string()).unwrap();
-    /* FIXME: Yet another error
-        thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: Error("trailing characters", line: 1, column: 186)', src\game_screen.rs:262:65
-        note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
-        thread 'main' panicked at 'called `Option::unwrap()` on a `None` value', C:\Users\Cross\.cargo\registry\src\github.com-1ecc6299db9ec823\bevy_tasks-0.9.1\src\task_pool.rs:273:45
-    */
     let match_str_data = loop {
         let data = client.recv().unwrap();
         if data.chars().next().unwrap() != '{' {
@@ -318,20 +373,22 @@ fn setup(
                 groups: vec![Group(0)],
                 bounding_box: (Vec2::new(-(CELLSIZE/2) as f32, -(CELLSIZE/2) as f32), Vec2::new((CELLSIZE/2) as f32, (CELLSIZE/2) as f32)),
                 ..default()
-            }).id();
+            })
+            .insert(GameScreenObject).id();
             color_index += 1;
             let obj = game_state.board.entity_at(chess_engine::Vec2 { x: col, y: row }).clone();
 
-            //if obj.is_some() {
-            //    println!("{} => {:?}", id.index(), obj.unwrap());
-            //}
+            if obj.is_some() {
+                println!("game_screen::setup() -> {} => {:?}", id.index(), obj.unwrap());
+            }
         }
     }
 
     // This must be at the end (don't ask me why)
     commands.spawn_empty()
         .insert(GlobalThing {})
-        .insert(game_state);
+        .insert(game_state)
+        .insert(GameScreenObject);
         // NETWORK HERE
         //.insert(ClientNative {
         //    tcp_client: network_handler::Client::create_client("localhost:8000".to_owned(), 128).unwrap()
@@ -362,7 +419,8 @@ fn setup(
             },
             ..default()
         }),
-        CurrentTurnText
+        CurrentTurnText,
+        GameScreenObject
     ));
 
     commands.spawn((
@@ -390,7 +448,8 @@ fn setup(
             },
             ..default()
         }),
-        CurrentPieceText
+        CurrentPieceText,
+        GameScreenObject
     ));
 
     client.send_cmd("GPN".to_string(), if player_color == TeamLoyalty::WHITE { data.player_2 } else { data.player_1 }).unwrap();
@@ -417,7 +476,8 @@ fn setup(
             },
             ..default()
         }),
-        CurrentMatchOpponent
+        CurrentMatchOpponent,
+        GameScreenObject
     ));
 
     commands.spawn((
@@ -445,7 +505,8 @@ fn setup(
             },
             ..default()
         }),
-        CurrentFenText
+        CurrentFenText,
+        GameScreenObject
     ));
 
     const HALF_SIZE: f32 = 1.0;
@@ -465,7 +526,7 @@ fn setup(
             ..default()
         },
         ..default()
-    });
+    }).insert(GameScreenObject);
 
     // commands.spawn(SceneBundle {
     //     scene: game_assets.test_scene.clone(),

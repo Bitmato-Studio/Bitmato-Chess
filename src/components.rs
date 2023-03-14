@@ -10,8 +10,11 @@ pub const CONFIG_FILE: &'static str = "assets/config/config.toml";
 pub const FONT_FILE: &'static str = "fonts/Eight-Bit_Madness.ttf";
 pub const BLACK_TEXT: Color = Color::DARK_GRAY;
 pub const WHITE_TEXT: Color = Color::rgb(99., 103., 110.);
-pub const CELLSIZE: i32 = 64; // TODO: Make this better (dynamic cell size)
+pub const CELLSIZE: i32 = 64;
 pub const BUFFER_SIZE: i32 = 1024;
+
+#[derive(Component)]
+pub struct GameScreenObject; // for cleanup post-match
 
 #[derive(Component)]
 pub struct GlobalThing; // just a struct so we can grab game state everywhere;
@@ -203,4 +206,13 @@ pub fn create_range_vector(x1: i32, x2: i32) -> Vec<i32> {
         }
     }
     range_vec
+}
+
+pub mod logging_functions {
+    pub fn get_function_name<F>(_: F) -> &'static str
+    where 
+        F: Fn(),
+    {
+        std::any::type_name::<F>()
+    } 
 }
